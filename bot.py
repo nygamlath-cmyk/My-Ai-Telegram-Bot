@@ -1,48 +1,54 @@
 import telebot
 import google.generativeai as genai
+import os
+from flask import Flask
+import threading
 
-# @BotFather ගෙන් ලැබුණු Token එක මෙතනට දාන්න
-BOT_TOKEN = '8588448311:AAGCDpiVXZgTEn2tRpccQvUKzTEg7c1-J9Y'
+# --- සරල Web Server එක (Render එකට අවශ්‍යයි) ---
+app = Flask(__name__)
+@app.route('/')
+def index():
+    return "Bot is Running!"
+
+def run_flask():
+    # Render විසින් ලබාදෙන Port එක ලබා ගැනීම
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# --- Telegram Bot කොටස ---
+BOT_TOKEN = 'ඔයාගේ_TELEGRAM_BOT_TOKEN' # මෙතනට ඔයාගේ Token එක දාන්න
 bot = telebot.TeleBot(BOT_TOKEN)
-
-# User ගේ API Keys තාවකාලිකව තියාගන්න Dictionary එකක්
 user_api_keys = {}
 
-# /start command එක ලැබුණම
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    welcome_text = "ආයුබෝවන්! 👋\n\nකරුණාකර ඔයාගේ **Gemini API Key** එක මෙතනට එවන්න. 🔑"
-    bot.reply_to(message, welcome_text, parse_mode="Markdown")
+    bot.reply_to(message, "ආයුබෝවන්! කරුණාකර ඔයාගේ Gemini API Key එක එවන්න. 🔑")
 
-# මැසේජ් එකක් ආවම ක්‍රියාත්මක වන කොටස
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     user_id = message.chat.id
-    user_text = message.text
-
-    # තවම API Key එක දීලා නැත්නම්, එවපු මැසේජ් එක Key එකක් විදිහට සලකන්න
     if user_id not in user_api_keys:
         try:
-            # API Key එක වැඩද බලන්න පොඩි test එකක් (Optional)
-            genai.configure(api_key=user_text)
+            genai.configure(api_key=message.text)
             model = genai.GenerativeModel('gemini-pro')
-            user_api_keys[user_id] = user_text # Key එක save කරගන්නවා
-            bot.reply_to(message, "සාර්ථකයි! ✅ ඔයාගේ Gemini API එක සම්බන්ධ වුණා. දැන් ඕනෑම ප්‍රශ්නයක් අහන්න.")
-        except Exception as e:
-            bot.reply_to(message, "වැරදි API Key එකක්. කරුණාකර නැවත උත්සාහ කරන්න.")
-    
-    # API Key එක දැනටමත් තියෙනවා නම්, Gemini හරහා උත්තර දෙන්න
+            model.generate_content("test") # පොඩි ටෙස්ට් එකක්
+            user_api_keys[user_id] = message.text
+            bot.reply_to(message, "සාර්ථකයි! ✅ දැන් ප්‍රශ්නයක් අහන්න.")
+        except:
+            bot.reply_to(message, "වැරදි API Key එකක්. නැවත එවන්න.")
     else:
         try:
             genai.configure(api_key=user_api_keys[user_id])
             model = genai.GenerativeModel('gemini-pro')
-            
-            # AI එකෙන් Response එක ගන්නවා
-            response = model.generate_content(user_text)
+            response = model.generate_content(message.text)
             bot.reply_to(message, response.text)
-            
-        except Exception as e:
-            bot.reply_to(message, "අයියෝ! Gemini එකෙන් උත්තරේ ගන්න බැරි වුණා. API Key එකේ ප්‍රශ්නයක් වෙන්න ඇති.")
+        except:
+            bot.reply_to(message, "Error එකක් ආවා. සමහරවිට API Key එකේ අවුලක්.")
 
-print("බොට් වැඩ කරන්න පටන් ගත්තා...")
-bot.polling()
+# --- ප්‍රධාන ක්‍රියාදාමය ---
+if __name__ == "__main__":
+    # Flask server එක වෙනම thread එකක run කරනවා
+    threading.Thread(target=run_flask).start()
+    
+    print("Bot is polling...")
+    bot.infinity_polling()
