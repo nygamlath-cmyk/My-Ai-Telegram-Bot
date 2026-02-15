@@ -16,7 +16,7 @@ def run_flask():
     app.run(host='0.0.0.0', port=port)
 
 # --- Telegram Bot කොටස ---
-BOT_TOKEN = 'ඔයාගේ_TELEGRAM_BOT_TOKEN' # මෙතනට ඔයාගේ Token එක දාන්න
+BOT_TOKEN = '8588448311:AAGCDpiVXZgTEn2tRpccQvUKzTEg7c1-J9Y' # මෙතනට ඔයාගේ Token එක දාන්න
 bot = telebot.TeleBot(BOT_TOKEN)
 user_api_keys = {}
 
