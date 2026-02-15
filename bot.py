@@ -2,7 +2,7 @@ import telebot
 import google.generativeai as genai
 
 # @BotFather ගෙන් ලැබුණු Token එක මෙතනට දාන්න
-BOT_TOKEN = 'ඔයාගේ_TELEGRAM_BOT_TOKEN'
+BOT_TOKEN = '8588448311:AAGCDpiVXZgTEn2tRpccQvUKzTEg7c1-J9Y'
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # User ගේ API Keys තාවකාලිකව තියාගන්න Dictionary එකක්
